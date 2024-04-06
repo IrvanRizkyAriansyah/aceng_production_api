@@ -15,9 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-dataset_path = '../metadata_kamera_augmented.json'
-my_model_path = '../my_models_2'
-my_token_path = '../my_token_models'
+dataset_path = './metadata_kamera_augmented.json'
+my_model_path = './my_models_2'
+my_token_path = './my_token_models'
 
 # Instansiasi model
 model = BertForSequenceClassification.from_pretrained(my_model_path)
