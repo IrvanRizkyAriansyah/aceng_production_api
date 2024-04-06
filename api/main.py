@@ -102,9 +102,13 @@ async def perform_search(query_item: QueryItem):
         return result
     except Exception as e:
         # Menangani kemungkinan error
-        # raise HTTPException(status_code=500, detail=str(e))
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    try:
+        # Kode yang mungkin menghasilkan kesalahan
+        return {"Hello": "World"}
+    except Exception as e:
+        # Tangani kesalahan dengan HTTPException
+        raise HTTPException(status_code=500, detail=str(e))
