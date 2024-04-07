@@ -1,9 +1,11 @@
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import BertTokenizer, BertForSequenceClassification
 from fastapi.middleware.cors import CORSMiddleware
 import torch
 import json
+import random
 
 app = FastAPI()
 
@@ -91,10 +93,75 @@ def search_json(query: str) -> dict:
 
     return result
 
+def find_product(search_query):
+    result = []
+
+    # Asumsi bahwa my_dataset['Products'] adalah sebuah list dari dictionary
+    for product in my_dataset['Products']:
+        # Periksa apakah 'Product_name' ada dan cocok dengan query pencarian
+        if search_query.lower() in product.get('Product_name', '').lower():
+            # Jika cocok, tambahkan seluruh objek produk ke dalam hasil
+            result_product = {
+                'Product_id': product.get('Product_id', ''),  # Gunakan nilai default '' jika kunci tidak ditemukan
+                'Product_name': product.get('Product_name', ''),
+                'Product_brand': product.get('Product_brand', ''),
+                'Product_images': product.get('Product_images', ''),
+                'Product_price': product.get('Product_price', '')
+            }
+            result.append(result_product)
+    
+    results = {
+        "status": 200,
+        "messages": "Success",
+        "data": result
+    }
+
+    return results
+
+def get_random_products():
+    # Pastikan dataset produk Anda sudah terdefinisi sebagai my_dataset
+    products = my_dataset['Products']
+
+    # Mengacak urutan dari produk-produk tersebut
+    random.shuffle(products)
+
+    # Mengambil 20 produk pertama dari list yang sudah diacak
+    random_products = products[:20]
+
+    results = {
+        "status": 200,
+        "messages": "Success",
+        "data": random_products
+    }
+
+    return results
+
 class QueryItem(BaseModel):
     query: str
 
-@app.post("/search")
+# Endpoint untuk mendapatkan produk acak
+@app.get("/product")
+def random_products():
+    try:
+        # Panggil fungsi get_random_products dan kembalikan hasilnya
+        result = get_random_products()
+        return result
+    except Exception as e:
+        # Tangani kemungkinan kesalahan
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint untuk melakukan pencarian produk
+@app.post("/product/search_product")
+async def perform_search(query_item: QueryItem):
+    try:
+        # Panggil fungsi find_product dan kembalikan hasilnya
+        result = find_product(query_item.query)
+        return result
+    except Exception as e:
+        # Tangani kemungkinan kesalahan
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/product/search")
 async def perform_search(query_item: QueryItem):
     try:
         # Memanggil fungsi search dan mengembalikan hasilnya
@@ -112,3 +179,6 @@ async def read_root():
     except Exception as e:
         # Tangani kesalahan dengan HTTPException
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
