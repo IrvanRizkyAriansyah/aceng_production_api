@@ -6,6 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import torch
 import json
 import random
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import AutoTokenizer, AutoModel
 
 app = FastAPI()
 
@@ -68,17 +71,19 @@ def search_json(query: str) -> dict:
     for topic in topics:
         if predicted_label == topic['Topic_ID']:
             accuracy = 1.0
+    # total_topic_products = sum(1 for product in my_products if product.get('Topic_id') == predicted_label)
+    # accuracy = len(found_products) / total_topic_products if total_topic_products > 0 else 0.0
 
     # Menyiapkan informasi produk yang ditemukan untuk respons
     products_info = []
     if found_products:
         for product in found_products:
             products_info.append({
-                "Product ID": product['Product_id'],
-                "Name": product['Product_name'],
-                "Brand": product['Product_brand'],
-                "Images": product['Product_images'],
-                "Price": product['Product_price'],
+                "Product_id": product['Product_id'],
+                "Product_name": product['Product_name'],
+                "Product_brand": product['Product_brand'],
+                "Product_images": product['Product_images'],
+                "Product_price": product['Product_price'],
             })
 
     result = {
@@ -92,6 +97,9 @@ def search_json(query: str) -> dict:
 
 
     return result
+
+class QueryInput(BaseModel):
+    query: str
 
 def find_product(search_query):
     result = []
@@ -162,7 +170,7 @@ async def perform_search(query_item: QueryItem):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/product/search")
-async def perform_search(query_item: QueryItem):
+async def search(query_item: QueryItem):
     try:
         # Memanggil fungsi search dan mengembalikan hasilnya
         result = search_json(query_item.query)
